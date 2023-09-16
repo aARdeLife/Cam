@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+  }
+  #camera-view, #photo-gallery {
+    margin: 10px;
+  }
+  #photo-gallery img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin: 5px;
+  }
+</style>
+<title>Photo App</title>
+</head>
+<body>
+
+<div id="camera-view">
+  <video id="video" width="300" height="300" autoplay></video>
+</div>
+
+<button id="capture-btn">Take a Photo</button>
+<button id="change-camera-btn">Change Camera</button>
+<button id="open-folder-btn">Open Photo Gallery</button>
+
+<div id="photo-gallery"></div>
+
+<script>
+  let videoElement = document.getElementById('video');
+  let captureBtn = document.getElementById('capture-btn');
+  let changeCameraBtn = document.getElementById('change-camera-btn');
+  let openFolderBtn = document.getElementById('open-folder-btn');
+  let photoGallery = document.getElementById('photo-gallery');
+
+  let currentStream;
+  let facingMode = 'user';
+
+  function stopMediaTracks(stream) {
+    stream.getTracks().forEach(track => {
+      track.stop();
+    });
+  }
+
+  function setupCamera() {
+    if (typeof currentStream !== 'undefined') {
+      stopMediaTracks(currentStream);
+    }
+
+    navigator.mediaDevices.getUserMedia({ 'video': { facingMode: facingMode }, 'audio': false })
+      .then(stream => {
+        currentStream = stream;
+        videoElement.srcObject = stream;
+      })
+      .catch(error => {
+        console.error('Error accessing the camera: ', error);
+      });
+  }
+
+  function capturePhoto() {
+    let canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    canvas.getContext('2d').drawImage(videoElement, 0, 0);
+    let imgElement = document.createElement('img');
+    imgElement.src = canvas.toDataURL('image/jpeg');
+    photoGallery.appendChild(imgElement);
+  }
+
+  captureBtn.addEventListener('click', capturePhoto);
+
+  changeCameraBtn.addEventListener('click', () => {
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    setupCamera();
+  });
+
+  openFolderBtn.addEventListener('click', () => {
+    photoGallery.style.display = 'flex';
+    photoGallery.style.flexWrap = 'wrap';
+  });
+
+  setupCamera();
+</script>
+
+</body>
+</html>
